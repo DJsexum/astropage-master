@@ -3,90 +3,98 @@
     import { onMount } from "svelte";
     import type { Post } from "../../core/interfaces/ejercicio3.interface";
 
-    let posts = $state <Post[]>([]);
-    let userID = $state <number>(0);
+    let posts = $state<Post[]>([]);
+    let userID = $state<number>(0);
+    let originalPosts: Post[] = [];
 
     onMount(async () => 
     {
-
         console.log("onMount");
 
-        const respuesta = await fetch
-        (
-            "https://jsonplaceholder.typicode.com/posts"
-        );
+        const respuesta = await fetch("https://jsonplaceholder.typicode.com/posts");
+        const data = await respuesta.json();
         
-        posts  = await respuesta.json();
+        originalPosts = data;
+        posts = data;
+        
         console.log("posts: ", posts);
     });
 
-    const filterPosts = (userId: number) => 
+    const filterPosts = (id: number) => 
     {
-        if (userID === 0 || isNaN(userId)) 
+        if (id === 0 || isNaN(id)) 
         {
             alert("Por favor, ingresa un ID de usuario válido.");
             return;
         }
 
-        const filteredPosts = Post
-        .filter ((post) => post.userId === userId);
-        .map ((post) => 
+        const filtered = originalPosts.filter((post) => post.userId === id);
+
+        if (filtered.length === 0)
         {
-            return 
-            {
-                id: post.id,
-                title: post.title,
-            };
+            console.log("No se encontraron posts para el ID de usuario: " + id);
+            alert("No se encontraron posts para ese ID");
         }
-            if (filterPosts.length === 0)
+            else
             {
-                console.log("No se encontraron posts para el ID de usuario: " + userID);
+                console.log("Se encontraron " + filtered.length + " posts para el ID de usuario: " + id);
+                posts = filtered;
             }
-                else
-                {
-                    console.log("se encontraron " + filterPosts.length + " posts para el ID de usuario: " + userID);
-                }
     };
 
 </script>
 
 <div class="mb-2 p-2">
 
-    <input class="border" bind:value={userID} type="number" step="1" min="0"/>
-    <button onclick = {() => filterPosts (userID)}> Filtrar Post </button>
+    <input
+        class="border p-1" 
+        bind:value={userID} 
+        type="number" 
+        step="1" 
+        min="0"
+    />
+
+    <button
+        onclick={() => filterPosts(userID)}
+        class="bg-blue-500 text-white px-2 py-1 rounded"
+    >
+
+        Filtrar Post
+
+    </button>
 
 </div>
 
-<table class = "w-full">
+<table class="w-full border-collapse">
 
-    <thead class = "bg-gray-400 text-black flex-1">
+    <thead class="bg-gray-400 text-black">
 
         <tr>
-
-            <th>ID</th>
-            <th>UserId</th>
-            <th>Title</th>
-            <th>Body</th>
+        
+            <th class="border p-2">ID</th>
+            <th class="border p-2">UserId</th>
+            <th class="border p-2 text-left">Title</th>
+            <th class="border p-2 text-left">Body</th>
 
         </tr>
 
     </thead>
 
-    <tbody class = "bg-gray-200 flex-1">
+    <tbody class="bg-gray-200">
 
         {#each posts as post}
 
-            <tr class = "p-2 hover:bg-gray-300">
+            <tr class="hover:bg-gray-300">
 
-                <td>{post.id}</td>
-                <td>{post.userId}</td>
-                <td>{post.title}</td>
-                <td>{post.body}</td>
+                <td class="border p-2 text-center">{post.id}</td>
+                <td class="border p-2 text-center">{post.userId}</td>
+                <td class="border p-2">{post.title}</td>
+                <td class="border p-2 text-sm">{post.body}</td>
 
             </tr>
 
         {/each}
 
     </tbody>
-
+    
 </table>
